@@ -1,55 +1,50 @@
-# Snowflake Cortex + Amazon Q Business RAG Integration
+# Snowflake Cortex Search + Amazon Q Business Integration
 
-This CDK project automates the deployment of a RAG (Retrieval Augmented Generation) system that connects Amazon Q Business to Snowflake Cortex Search, based on the [Snowflake quickstart guide](https://quickstarts.snowflake.com/guide/getting_started_with_amazon_q_business%20and_cortex/index.html).
+A production-ready solution that connects Amazon Q Business to Snowflake Cortex Search, enabling natural language queries over your Snowflake data through a conversational AI interface.
 
-## Architecture
+## 🚀 Overview
 
-The solution automates these 7 key steps:
+This project provides a complete automation framework for integrating Amazon Q Business with Snowflake Cortex Search. Users can ask natural language questions about documents stored in Snowflake and receive intelligent responses powered by Cortex Search's vector similarity capabilities.
 
-1. **Prerequisites Setup** - AWS and Snowflake account requirements
-2. **Snowflake Infrastructure** - Database, warehouse, and stage creation
-3. **Document Processing** - PDF parsing and text chunking
-4. **Cortex Search Service** - Vector search service creation
-5. **Amazon Q Business App** - Q Business application setup
-6. **OAuth Integration** - Secure connection between Q and Snowflake
-7. **Plugin Configuration** - Custom plugin for Cortex Search queries
+## ✨ Key Features
 
-## What Gets Deployed
+- **🤖 Natural Language Queries**: Ask questions in plain English about your Snowflake data
+- **📄 PDF Document Processing**: Automated parsing and chunking of PDF documents
+- **🔍 Vector Search**: Powered by Snowflake Cortex Search for accurate semantic retrieval
+- **🔐 Secure OAuth Integration**: End-to-end OAuth 2.0 authentication between Q Business and Snowflake
+- **☁️ Serverless Architecture**: Fully automated AWS CDK deployment
+- **📊 Production Ready**: Includes monitoring, error handling, and best practices
 
-### AWS Resources
-- **Amazon Q Business Application** - Main chat interface
-- **Lambda Function** - Snowflake API operations
-- **S3 Bucket** - PDF document storage
-- **Secrets Manager** - Snowflake credentials and OAuth tokens
-- **IAM Roles** - Required permissions for Q Business
-- **Custom Plugin** - Connects Q Business to Cortex Search
+## 🏗️ Architecture
 
-### Snowflake Resources (via API)
-- **HOL_WH Warehouse** - Compute resources
-- **PUMP_DB Database** - Data storage
-- **DOCS Stage** - File upload area
-- **PUMP_TABLE** - Raw document data
-- **PUMP_TABLE_CHUNK** - Processed text chunks
-- **PUMP_SEARCH_SERVICE** - Cortex Search service
-- **Q_AUTH_HOL** - OAuth integration
+The solution consists of:
 
-## Prerequisites
+1. **Amazon Q Business Application** - Conversational AI interface
+2. **Custom Q Business Plugin** - Connects to Snowflake Cortex Search REST API
+3. **Snowflake Cortex Search Service** - Vector search over processed documents
+4. **OAuth Integration** - Secure authentication between services
+5. **Automated Setup** - Python script handles all Snowflake configuration
 
-1. **AWS Account** with Amazon Q Business access
-2. **Snowflake Account** with Cortex Search enabled
-3. **IAM Identity Center** instance configured
-4. **Node.js 18+** and **AWS CDK** installed
+## 📋 Prerequisites
 
-## Setup Instructions
+- **AWS Account** with Amazon Q Business access
+- **Snowflake Account** with Cortex Search enabled
+- **IAM Identity Center** instance configured
+- **Node.js 18+** and **AWS CDK** installed
+- **Python 3.8+** with required packages
 
-### 1. Clone and Install Dependencies
+## 🚀 Quick Start
+
+### Step 1: Clone and Install Dependencies
 
 ```bash
-cd /Users/bscreen/Documents/Development/snowflake-qbusiness-rag
+git clone https://github.com/william-screen/sample-snowflake-plugin-for-amazon-q-business.git
+cd sample-snowflake-plugin-for-amazon-q-business
 npm install
+pip install -r requirements.txt
 ```
 
-### 2. Configure Environment
+### Step 2: Configure Environment Variables
 
 Set your configuration via environment variables:
 
@@ -68,7 +63,7 @@ cdk deploy \
   -c identityCenterInstanceArn=arn:aws:sso:::instance/ssoins-xxxxxxxxx
 ```
 
-### 3. Deploy the Stack
+### Step 3: Deploy AWS Infrastructure
 
 ```bash
 # Bootstrap CDK (first time only)
@@ -78,9 +73,9 @@ cdk bootstrap
 cdk deploy
 ```
 
-### 4. **CRITICAL: Enable General Knowledge**
+### Step 4: Enable General Knowledge (CRITICAL)
 
-After deployment, you **MUST** enable General Knowledge for file uploads to work:
+After deployment, you **MUST** enable General Knowledge for the plugin to work:
 
 ```bash
 # Get the Application ID from CDK output, then run:
@@ -91,123 +86,152 @@ aws qbusiness update-chat-controls-configuration \
   --region us-east-1
 ```
 
-**Without this step, users will get "Amazon Q was not configured correctly" errors.**
+**⚠️ Without this step, users will get "Amazon Q was not configured correctly" errors.**
 
-### 5. Upload Sample Documents
+### Step 5: Run Snowflake Automation Script
 
-After deployment, upload the pump maintenance PDFs to the created S3 bucket:
+Execute the Python automation script to set up Snowflake infrastructure:
 
-```bash
-# Download sample documents
-curl -O https://raw.githubusercontent.com/Snowflake-Labs/sfguide-getting-started-with-amazon-q-for-business-and-cortex/main/1290IF_PumpHeadMaintenance_TN.pdf
-curl -O https://raw.githubusercontent.com/Snowflake-Labs/sfguide-getting-started-with-amazon-q-for-business-and-cortex/main/PumpWorks%20610%20PWI%20pump_Maintenance.pdf
-
-# Upload to S3 bucket (replace with your bucket name from CDK output)
-aws s3 cp 1290IF_PumpHeadMaintenance_TN.pdf s3://snowflake-qbusiness-docs-ACCOUNT/
-aws s3 cp "PumpWorks 610 PWI pump_Maintenance.pdf" s3://snowflake-qbusiness-docs-ACCOUNT/
-```
-
-### 6. Complete Snowflake Setup
-
-The automation script now automatically:
-- ✅ Uses correct Web Experience URL for OAuth redirect URI
-- ✅ Creates Snowflake database, warehouse, and Cortex Search Service  
-- ✅ Uploads and processes PDF documents
-- ✅ Configures OAuth integration with proper redirect URI
-- ✅ Retrieves OAuth credentials for Secrets Manager
-
-**If you need to re-run Snowflake setup:**
 ```bash
 python3 scripts/snowflake_automation.py
 ```
 
-**Credentials:** `DEMODEVELOPER` / `9o0TLi2T!fQQAqJIC`
+This script automatically:
+- ✅ Creates Snowflake database, warehouse, and stage
+- ✅ Downloads and uploads sample PDF documents
+- ✅ Parses PDFs and creates text chunks using Cortex functions
+- ✅ Creates Cortex Search Service
+- ✅ Sets up OAuth integration with correct redirect URI
+- ✅ Retrieves OAuth credentials for AWS Secrets Manager
+- ✅ Validates the complete setup
 
-## Usage
+### Step 6: Update AWS Secrets Manager
+
+The automation script outputs OAuth credentials. Update your AWS secret:
+
+```bash
+# Use the credentials output from the Python script
+aws secretsmanager update-secret \
+  --secret-id YOUR_SECRET_ARN \
+  --secret-string '{"client_id":"...","client_secret":"...","redirect_uri":"..."}'
+```
+
+## 🧪 Testing the Integration
 
 Once deployed and configured:
 
 1. Navigate to the Amazon Q Business application URL (from CDK output)
 2. Select the "cortex-pump" plugin
 3. Ask questions about pump maintenance:
-   - "What is the part description for part number G4204-68741?"
-   - "What are the pump head assembly parts?"
-   - "What are the high level steps for Replacing the Heat Exchanger?"
+   - *"What is the part description for part number G4204-68741?"*
+   - *"What are the pump head assembly parts?"*
+   - *"What are the high level steps for Replacing the Heat Exchanger?"*
 
-## Customization
+## 📊 Sample Data
 
-### Adding More Documents
-- Upload additional PDFs to the S3 bucket
-- Update the Snowflake tables to include new documents
-- Refresh the Cortex Search Service
+The solution includes sample pump maintenance PDF documents:
+- **1290IF_PumpHeadMaintenance_TN.pdf** - Agilent pump maintenance guide
+- **PumpWorks 610 PWI pump_Maintenance.pdf** - PumpWorks maintenance manual
+
+These documents are automatically processed into **197 text chunks** for semantic search.
+
+## 🔧 Customization
+
+### Adding Your Own Documents
+
+1. Upload PDFs to the S3 bucket created by CDK
+2. Update the Snowflake automation script to process your documents
+3. Refresh the Cortex Search Service
 
 ### Modifying Search Parameters
+
 - Adjust chunk size and overlap in `SPLIT_TEXT_RECURSIVE_CHARACTER`
 - Modify the Cortex Search Service configuration
 - Update the OpenAPI schema for different query patterns
 
-## Troubleshooting
+## 🔐 Security Features
+
+- **OAuth 2.0 Authentication** between Q Business and Snowflake
+- **AWS Secrets Manager** for credential storage
+- **IAM Roles** with least-privilege access
+- **Encrypted S3 Storage** for documents
+- **VPC Endpoints** support (optional)
+
+## 🛠️ Key Technical Details
+
+### OAuth Configuration
+The solution uses the correct OAuth secret format required by Q Business:
+```json
+{
+  "client_id": "base64-encoded-client-id",
+  "client_secret": "base64-encoded-secret", 
+  "redirect_uri": "https://your-qbusiness-url/oauth/callback"
+}
+```
+
+### REST API Endpoint
+Uses the correct Snowflake Cortex Search REST API format:
+```
+/api/v2/databases/pump_db/schemas/public/cortex-search-services/PUMP_SEARCH_SERVICE:query
+```
+
+### PDF Processing
+- PDFs uploaded with `AUTO_COMPRESS=FALSE` to maintain compatibility
+- Text extraction using `SNOWFLAKE.CORTEX.PARSE_DOCUMENT`
+- Chunking with `SNOWFLAKE.CORTEX.SPLIT_TEXT_RECURSIVE_CHARACTER`
+
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **Snowflake Connection Errors**
-   - Verify account identifier format
-   - Check user permissions (ACCOUNTADMIN role recommended)
+1. **OAuth Authentication Errors**
+   - Verify secret format includes `client_id`, `client_secret`, and `redirect_uri`
+   - Check that redirect URI matches Q Business web experience URL
+   - Ensure OAuth integration exists in Snowflake
+
+2. **Plugin Not Found Errors**
+   - Confirm General Knowledge is enabled in Q Business
+   - Verify plugin is in "READY" state
+   - Check OpenAPI schema syntax
+
+3. **Cortex Search Errors**
    - Ensure Cortex Search is enabled in your Snowflake account
-
-2. **Q Business Plugin Errors**
-   - Verify OAuth configuration
-   - Check IAM permissions
-   - Ensure Identity Center instance ARN is correct
-
-3. **Lambda Function Timeouts**
-   - Increase timeout in CDK stack
-   - Check Snowflake API rate limits
-   - Verify network connectivity
+   - Verify documents were processed successfully
+   - Check that search service is "ACTIVE"
 
 ### Logs and Monitoring
 
-- **Lambda Logs**: CloudWatch Logs for Snowflake operations
 - **Q Business Logs**: Check Q Business console for plugin errors
 - **Snowflake Logs**: Query history in Snowflake console
+- **CloudWatch Logs**: Lambda function logs (if using custom middleware)
 
-## Cost Considerations
+## 💰 Cost Considerations
 
 - **Amazon Q Business**: Per-user subscription costs
-- **Lambda**: Pay-per-invocation (minimal for setup)
-- **S3**: Storage costs for PDF documents
 - **Snowflake**: Warehouse compute and storage costs
-- **Secrets Manager**: Secret storage costs
+- **AWS Services**: S3 storage, Secrets Manager, minimal Lambda costs
+- **Cortex Search**: Included with Snowflake Enterprise edition
 
-## Security
+## 🤝 Contributing
 
-- Credentials stored in AWS Secrets Manager
-- OAuth 2.0 for secure API access
-- IAM roles with least-privilege access
-- Encrypted S3 bucket and Snowflake stage
+Contributions are welcome! Please:
 
-## Cleanup
+1. Fork the repository
+2. Create a feature branch
+3. Test your changes thoroughly
+4. Submit a pull request with detailed description
 
-To remove all resources:
+## 📄 License
 
-```bash
-cdk destroy
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Note: You may need to manually clean up Snowflake resources if the Lambda function fails during deletion.
+## 🔗 References
 
-## Contributing
-
-This project automates the manual steps from the Snowflake quickstart. To contribute:
-
-1. Test with different Snowflake account configurations
-2. Add support for additional document types
-3. Improve error handling and retry logic
-4. Add CloudFormation outputs for easier integration
-
-## References
-
-- [Snowflake Quickstart Guide](https://quickstarts.snowflake.com/guide/getting_started_with_amazon_q_business%20and_cortex/index.html)
+- [Snowflake Cortex Search Documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-search)
 - [Amazon Q Business Documentation](https://docs.aws.amazon.com/amazonq/)
-- [Snowflake Cortex Search](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-search)
 - [AWS CDK Documentation](https://docs.aws.amazon.com/cdk/)
+- [Snowflake Quickstart Guide](https://quickstarts.snowflake.com/guide/getting_started_with_amazon_q_business%20and_cortex/index.html)
+
+---
+
+**Built with ❤️ for the AWS and Snowflake communities**
