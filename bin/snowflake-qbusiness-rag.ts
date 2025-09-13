@@ -1,20 +1,30 @@
 #!/usr/bin/env node
+import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { SnowflakeQbusinessRagStack } from '../lib/snowflake-qbusiness-rag-stack';
+import { SnowflakeQBusinessRagAutomatedStack } from '../lib/snowflake-qbusiness-rag-automated';
 
 const app = new cdk.App();
-new SnowflakeQbusinessRagStack(app, 'SnowflakeQbusinessRagStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+const snowflakeAccount = app.node.tryGetContext('snowflakeAccount') || process.env.SNOWFLAKE_ACCOUNT;
+const snowflakeUser = app.node.tryGetContext('snowflakeUser') || process.env.SNOWFLAKE_USER;
+const identityCenterInstanceArn = app.node.tryGetContext('identityCenterInstanceArn') || process.env.IDENTITY_CENTER_INSTANCE_ARN;
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
+if (!snowflakeAccount || !snowflakeUser || !identityCenterInstanceArn) {
+  throw new Error(`
+    Missing required configuration. Please provide:
+    - snowflakeAccount: Your Snowflake account identifier
+    - snowflakeUser: Your Snowflake username
+    - identityCenterInstanceArn: Your AWS IAM Identity Center instance ARN
+  `);
+}
 
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+new SnowflakeQBusinessRagAutomatedStack(app, 'SnowflakeQBusinessRagAutomatedStack', {
+  snowflakeAccount,
+  snowflakeUser,
+  identityCenterInstanceArn,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+  description: '🚀 AUTOMATED Snowflake Cortex + Amazon Q Business RAG integration',
 });
