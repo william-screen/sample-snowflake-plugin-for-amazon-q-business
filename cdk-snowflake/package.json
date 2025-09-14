@@ -1,0 +1,20 @@
+{
+  "name": "cdk-snowflake",
+  "version": "1.0.0",
+  "description": "CDK infrastructure for Snowflake Cortex Search + Amazon Q Business integration",
+  "main": "app.py",
+  "scripts": {
+    "build": "echo 'No build step needed for Python CDK'",
+    "deploy": "./scripts/deploy.sh",
+    "destroy": "cdk destroy",
+    "synth": "cdk synth",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "aws-cdk": "2.100.0"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.211.0",
+    "constructs": "^10.0.0"
+  }
+}

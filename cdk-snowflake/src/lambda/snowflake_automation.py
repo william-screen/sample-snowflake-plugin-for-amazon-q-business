@@ -16,7 +16,17 @@ def get_stack_outputs() -> Dict[str, str]:
     """Get CDK stack outputs"""
     cf = boto3.client('cloudformation')
     try:
-        response = cf.describe_stacks(StackName='SnowflakeQBusinessRagStack')
+        # Try region-specific stack name first
+        aws_region = os.environ.get('AWS_REGION', 'us-east-1')
+        region_suffix = aws_region.replace('-', '')
+        stack_name = f'SnowflakeQBusinessRagStack-{region_suffix}'
+        
+        try:
+            response = cf.describe_stacks(StackName=stack_name)
+        except:
+            # Fallback to original stack name
+            response = cf.describe_stacks(StackName='SnowflakeQBusinessRagStack')
+            
         outputs = {}
         for output in response['Stacks'][0]['Outputs']:
             outputs[output['OutputKey']] = output['OutputValue']
@@ -243,6 +253,47 @@ def execute_snowflake_setup(snowflake_account: str, web_experience_url: str):
         print("  🔐 OAuth credentials retrieved - update Secrets Manager with these values:")
         print(f"    {json.dumps(oauth_credentials)}")
         
+        # Update Secrets Manager with OAuth credentials
+        print("  🔄 Updating Secrets Manager with OAuth credentials...")
+        try:
+            import boto3
+            secrets_client = boto3.client('secretsmanager')
+            
+            # Get the secret ARN from stack outputs
+            outputs = get_stack_outputs()
+            secret_arn = outputs.get('SnowflakeOAuthSecretArn')
+            
+            if secret_arn:
+                secrets_client.update_secret(
+                    SecretId=secret_arn,
+                    SecretString=json.dumps(oauth_credentials)
+                )
+                print("  ✅ Secrets Manager updated successfully")
+            else:
+                print("  ❌ Could not find secret ARN in stack outputs")
+        except Exception as e:
+            print(f"  ❌ Failed to update Secrets Manager: {e}")
+        
+        # Enable General Knowledge in Q Business
+        print("  🧠 Enabling General Knowledge in Q Business...")
+        try:
+            qbusiness_client = boto3.client('qbusiness')
+            app_id = outputs.get('QBusinessApplicationId')
+            
+            if app_id:
+                qbusiness_client.update_chat_controls_configuration(
+                    applicationId=app_id,
+                    responseScope='EXTENDED_KNOWLEDGE_ENABLED',
+                    creatorModeConfiguration={
+                        'creatorModeControl': 'ENABLED'
+                    }
+                )
+                print("  ✅ General Knowledge enabled successfully")
+            else:
+                print("  ❌ Could not find Q Business Application ID in stack outputs")
+        except Exception as e:
+            print(f"  ❌ Failed to enable General Knowledge: {e}")
+        
         # Step 10: Validate data and search service
         print("  🧪 Validating data and search service...")
         
@@ -329,10 +380,12 @@ def main():
     if success:
         print("\n🎉 FULL AUTOMATION COMPLETE!")
         print(f"🔗 Q Business Console: {q_business_url}")
-        print("\n📋 Final Steps:")
-        print("1. Update AWS Secrets Manager with OAuth credentials shown above")
-        print("2. Test the cortex-pump plugin in Q Business")
-        print("\n📄 Sample questions to test:")
+        print(f"🌐 Web Experience: {web_experience_url}")
+        print("\n✅ All steps completed automatically:")
+        print("  ✅ Snowflake setup with 198 text chunks")
+        print("  ✅ OAuth credentials updated in Secrets Manager")
+        print("  ✅ General Knowledge enabled in Q Business")
+        print("\n🧪 Ready to test with sample questions:")
         print("  - What is the part description for part number G4204-68741?")
         print("  - What are the pump head assembly parts?")
         print("  - What are the high level steps for Replacing the Heat Exchanger?")

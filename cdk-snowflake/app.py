@@ -18,15 +18,20 @@ if not snowflake_account or not snowflake_user or not identity_center_instance_a
     - identityCenterInstanceArn: Your AWS IAM Identity Center instance ARN
     """)
 
+# Generate region-specific stack name
+aws_region = os.environ.get("AWS_REGION") or os.environ.get("CDK_DEFAULT_REGION") or "us-east-1"
+region_suffix = aws_region.replace("-", "")
+stack_name = f"SnowflakeQBusinessRagStack-{region_suffix}"
+
 SnowflakeQBusinessRagStack(
     app,
-    "SnowflakeQBusinessRagStack",
+    stack_name,
     snowflake_account=snowflake_account,
     snowflake_user=snowflake_user,
     identity_center_instance_arn=identity_center_instance_arn,
     env=cdk.Environment(
         account=os.environ.get("CDK_DEFAULT_ACCOUNT"),
-        region=os.environ.get("CDK_DEFAULT_REGION"),
+        region=aws_region,
     ),
     description="🚀 AUTOMATED Snowflake Cortex + Amazon Q Business RAG integration (Python)",
 )
