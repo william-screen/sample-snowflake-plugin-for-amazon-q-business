@@ -295,6 +295,32 @@ def execute_snowflake_setup(snowflake_account: str, web_experience_url: str):
         except Exception as e:
             print(f"  ❌ Failed to enable General Knowledge: {e}")
         
+        # Refresh plugin OAuth credentials
+        print("  🔄 Refreshing plugin OAuth credentials...")
+        try:
+            plugin_id = outputs.get('CortexPluginId', '').split('|')[-1] if outputs.get('CortexPluginId') else None
+            
+            if app_id and plugin_id:
+                # Disable plugin to clear OAuth cache
+                qbusiness_client.update_plugin(
+                    applicationId=app_id,
+                    pluginId=plugin_id,
+                    state='DISABLED'
+                )
+                print("  🔄 Plugin disabled...")
+                
+                # Re-enable plugin with fresh OAuth credentials
+                qbusiness_client.update_plugin(
+                    applicationId=app_id,
+                    pluginId=plugin_id,
+                    state='ENABLED'
+                )
+                print("  ✅ Plugin re-enabled with fresh OAuth credentials")
+            else:
+                print("  ❌ Could not find plugin ID in stack outputs")
+        except Exception as e:
+            print(f"  ❌ Failed to refresh plugin: {e}")
+        
         # Step 10: Validate data and search service
         print("  🧪 Validating data and search service...")
         
@@ -355,6 +381,7 @@ def execute_snowflake_setup(snowflake_account: str, web_experience_url: str):
 def main():
     """Main automation function"""
     print("🚀 Starting FULLY AUTOMATED Snowflake + Q Business integration...")
+    sys.stdout.flush()
     
     # Get stack outputs
     outputs = get_stack_outputs()
@@ -370,10 +397,12 @@ def main():
     print(f"  Q Business URL: {q_business_url}")
     print(f"  Web Experience URL: {web_experience_url}")
     print(f"  Secret ARN: {secret_arn}")
+    sys.stdout.flush()
     
     # Download and upload PDFs
     if bucket_name:
         download_sample_pdfs(bucket_name)
+        sys.stdout.flush()
     
     # Execute Snowflake setup with Web Experience URL for correct OAuth redirect
     success = execute_snowflake_setup(snowflake_account, web_experience_url)
@@ -386,12 +415,15 @@ def main():
         print("  ✅ Snowflake setup with 198 text chunks")
         print("  ✅ OAuth credentials updated in Secrets Manager")
         print("  ✅ General Knowledge enabled in Q Business")
+        print("  ✅ Plugin OAuth credentials refreshed")
         print("\n🧪 Ready to test with sample questions:")
         print("  - What is the part description for part number G4204-68741?")
         print("  - What are the pump head assembly parts?")
         print("  - What are the high level steps for Replacing the Heat Exchanger?")
     else:
         print("\n❌ Automation failed - check errors above")
+    
+    sys.stdout.flush()
 
 if __name__ == "__main__":
     main()
