@@ -14,10 +14,10 @@ from typing import Dict, Any
 
 def get_stack_outputs() -> Dict[str, str]:
     """Get CDK stack outputs"""
-    cf = boto3.client('cloudformation')
+    aws_region = os.environ.get('AWS_REGION', 'us-east-1')
+    cf = boto3.client('cloudformation', region_name=aws_region)
     try:
         # Try region-specific stack name first
-        aws_region = os.environ.get('AWS_REGION', 'us-east-1')
         region_suffix = aws_region.replace('-', '')
         stack_name = f'SnowflakeQBusinessRagStack-{region_suffix}'
         
@@ -257,7 +257,8 @@ def execute_snowflake_setup(snowflake_account: str, web_experience_url: str):
         print("  🔄 Updating Secrets Manager with OAuth credentials...")
         try:
             import boto3
-            secrets_client = boto3.client('secretsmanager')
+            aws_region = os.environ.get('AWS_REGION', 'us-east-1')
+            secrets_client = boto3.client('secretsmanager', region_name=aws_region)
             
             # Get the secret ARN from stack outputs
             outputs = get_stack_outputs()
@@ -277,7 +278,7 @@ def execute_snowflake_setup(snowflake_account: str, web_experience_url: str):
         # Enable General Knowledge in Q Business
         print("  🧠 Enabling General Knowledge in Q Business...")
         try:
-            qbusiness_client = boto3.client('qbusiness')
+            qbusiness_client = boto3.client('qbusiness', region_name=aws_region)
             app_id = outputs.get('QBusinessApplicationId')
             
             if app_id:
