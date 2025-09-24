@@ -82,6 +82,7 @@ cdk destroy
 - [Deployment Guide](cdk-snowflake/docs/DEPLOYMENT.md)
 - [Troubleshooting](cdk-snowflake/docs/TROUBLESHOOTING.md)
 - [CDK Documentation](cdk-snowflake/README.md)
+- [Snowflake Quickstart Guide](https://quickstarts.snowflake.com/guide/getting_started_with_amazon_q_business%20and_cortex/index.html#0)
 
 ## License
 
