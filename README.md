@@ -105,9 +105,11 @@ This automatically handles:
 
 **Step 5: Assign User Access:**
 
-1. Go to IAM Identity Center Console → **Applications**
-2. Find your Q Business application → **Assign users and groups**
-3. Add your user or group → Save
+1. Go to Amazon Q Business Console → **Applications**
+2. Select your application → **Manage user access**
+3. Select **Add users and groups** → Choose your IAM Identity Center users/groups
+4. Assign subscription tier (Q Business Lite or Pro) → **Confirm**
+5. Users can now access the Web Experience URL with their IAM Identity Center credentials
 
 **Step 6: Test Access:**
 
