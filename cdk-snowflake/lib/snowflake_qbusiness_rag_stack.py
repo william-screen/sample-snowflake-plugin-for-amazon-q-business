@@ -26,10 +26,26 @@ class SnowflakeQBusinessRagStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         # Step 1: Create S3 bucket for PDF documents
+        import random
+        import string
+        
+        # Generate 4-character random suffix
+        random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
+        bucket_name = f"snowflake-qbusiness-docs-{self.region}-{self.account}-{random_suffix}"
+        
+        # Ensure bucket name is under 62 characters
+        if len(bucket_name) > 62:
+            # Truncate if needed, keeping the random suffix
+            max_base_length = 62 - len(random_suffix) - 1  # -1 for the dash
+            base_name = f"snowflake-qbusiness-docs-{self.region}-{self.account}"
+            if len(base_name) > max_base_length:
+                base_name = base_name[:max_base_length]
+            bucket_name = f"{base_name}-{random_suffix}"
+        
         documents_bucket = s3.Bucket(
             self,
             "DocumentsBucket",
-            bucket_name=f"snowflake-qbusiness-docs-auto-{self.region}-{self.account}",
+            bucket_name=bucket_name,
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True,
         )
@@ -345,7 +361,7 @@ components:
         CfnOutput(
             self,
             "QBusinessApplicationUrl",
-            value=f"https://console.aws.amazon.com/q/business/applications/{qbusiness_app.ref}",
+            value=f"https://{self.region}.console.aws.amazon.com/amazonq/business/applications/{qbusiness_app.ref}/details?region={self.region}",
             description="🔗 Amazon Q Business Application Console URL",
         )
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Snowflake Cortex Search + Amazon Q Business Integration Deployment Script
-# Production-ready deployment with proper error handling and validation
+# Snowflake Cortex Search + Amazon Q Business Integration Deployment Controller
+# Orchestrates complete deployment: AWS infrastructure + Snowflake integration
 
 set -euo pipefail
 
@@ -26,77 +26,92 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-STACK_NAME="${1:-SnowflakeQBusinessRagStack-${AWS_REGION//-/}}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 
-echo -e "${BLUE}🚀 SNOWFLAKE CORTEX SEARCH + AMAZON Q BUSINESS DEPLOYMENT${NC}"
-echo -e "${BLUE}================================================================${NC}"
+echo -e "${BLUE}===============================================================================${NC}"
+echo -e "${BLUE}                SNOWFLAKE CORTEX SEARCH + AMAZON Q BUSINESS${NC}"
+echo -e "${BLUE}                           DEPLOYMENT CONTROLLER${NC}"
+echo -e "${BLUE}===============================================================================${NC}"
 echo ""
-echo -e "📦 Stack Name: ${GREEN}${STACK_NAME}${NC}"
-echo -e "🌍 Region: ${GREEN}${AWS_REGION}${NC}"
+echo -e "Region: ${GREEN}${AWS_REGION}${NC}"
 echo ""
 
 # Validate prerequisites
-echo -e "${YELLOW}🔍 Validating prerequisites...${NC}"
+echo -e "${YELLOW}VALIDATING PREREQUISITES${NC}"
+echo -e "-------------------------"
 
 # Check AWS CLI
 if ! command -v aws &> /dev/null; then
-    echo -e "${RED}❌ AWS CLI not found. Please install AWS CLI.${NC}"
+    echo -e "${RED}ERROR: AWS CLI not found. Please install AWS CLI.${NC}"
     exit 1
 fi
 
 # Check CDK
 if ! command -v cdk &> /dev/null; then
-    echo -e "${RED}❌ AWS CDK not found. Please install AWS CDK.${NC}"
+    echo -e "${RED}ERROR: AWS CDK not found. Please install AWS CDK.${NC}"
     exit 1
 fi
 
 # Check Python
 if ! command -v python3 &> /dev/null; then
-    echo -e "${RED}❌ Python 3 not found. Please install Python 3.8+.${NC}"
+    echo -e "${RED}ERROR: Python 3 not found. Please install Python 3.8+.${NC}"
     exit 1
 fi
 
 # Check required environment variables
 if [[ -z "${SNOWFLAKE_ACCOUNT:-}" ]]; then
-    echo -e "${RED}❌ SNOWFLAKE_ACCOUNT environment variable not set.${NC}"
+    echo -e "${RED}ERROR: SNOWFLAKE_ACCOUNT environment variable not set.${NC}"
     exit 1
 fi
 
 if [[ -z "${SNOWFLAKE_USER:-}" ]]; then
-    echo -e "${RED}❌ SNOWFLAKE_USER environment variable not set.${NC}"
+    echo -e "${RED}ERROR: SNOWFLAKE_USER environment variable not set.${NC}"
     exit 1
+fi
+
+if [[ -z "${SNOWFLAKE_PASSWORD:-}" ]]; then
+    echo -e "${RED}ERROR: SNOWFLAKE_PASSWORD environment variable not set.${NC}"
+    exit 1
+fi
+
+if [[ -z "${SNOWFLAKE_ROLE:-}" ]]; then
+    echo -e "${YELLOW}WARNING: SNOWFLAKE_ROLE not set, defaulting to ACCOUNTADMIN${NC}"
 fi
 
 if [[ -z "${IDENTITY_CENTER_INSTANCE_ARN:-}" ]]; then
-    echo -e "${RED}❌ IDENTITY_CENTER_INSTANCE_ARN environment variable not set.${NC}"
+    echo -e "${RED}ERROR: IDENTITY_CENTER_INSTANCE_ARN environment variable not set.${NC}"
     exit 1
 fi
 
-echo -e "${GREEN}✅ Prerequisites validated${NC}"
+echo -e "${GREEN}SUCCESS: All prerequisites validated${NC}"
 echo ""
 
-# Install Python dependencies
-echo -e "${YELLOW}📦 Installing Python dependencies...${NC}"
-pip install -r requirements.txt
-
-# Install CDK dependencies
-echo -e "${YELLOW}📦 Installing CDK dependencies...${NC}"
-npm install
-
-# Bootstrap CDK (if needed)
-echo -e "${YELLOW}🏗️ Bootstrapping CDK...${NC}"
-cdk bootstrap --region ${AWS_REGION}
-
-# Deploy CDK stack
-echo -e "${YELLOW}🚀 Deploying CDK stack...${NC}"
-cdk deploy ${STACK_NAME} --region ${AWS_REGION} --require-approval never
-
+# Step 1: Deploy AWS Infrastructure
+echo -e "${BLUE}===============================================================================${NC}"
+echo -e "${BLUE}                              STEP 1: AWS SETUP${NC}"
+echo -e "${BLUE}===============================================================================${NC}"
 echo ""
-echo -e "${GREEN}✅ CDK deployment completed successfully!${NC}"
+
+./scripts/setup_aws.sh
+
+# Step 2: Configure Snowflake Integration
+echo -e "${BLUE}===============================================================================${NC}"
+echo -e "${BLUE}                          STEP 2: SNOWFLAKE SETUP${NC}"
+echo -e "${BLUE}===============================================================================${NC}"
 echo ""
-echo -e "${YELLOW}📋 Next steps:${NC}"
-echo -e "1. Run the Snowflake automation script: ${BLUE}python3 src/lambda/snowflake_automation.py${NC}"
-echo -e "2. Enable General Knowledge in Q Business application"
-echo -e "3. Test the integration with sample queries"
+
+./scripts/setup_snowflake.sh
+
+# Final Summary
+echo -e "${GREEN}===============================================================================${NC}"
+echo -e "${GREEN}                           DEPLOYMENT COMPLETED${NC}"
+echo -e "${GREEN}===============================================================================${NC}"
+echo ""
+echo -e "${YELLOW}NEXT STEPS${NC}"
+echo -e "----------"
+echo -e "1. Assign users to your Q Business application via IAM Identity Center"
+echo -e ""
+echo -e "2. Test access in a private browser window using your Web Experience URL"
+echo -e ""
+echo -e "3. Try sample queries to verify the Snowflake integration"
 echo ""

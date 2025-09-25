@@ -1,48 +1,96 @@
-# Snowflake Cortex Search + Amazon Q Business Integration
+# Amazon Q Business Custom Plugin for Snowflake Cortex Search
 
-Connect Amazon Q Business to Snowflake Cortex Search for natural language queries over your Snowflake data.
+*Automated deployment of a custom plugin connecting Amazon Q Business to Snowflake Cortex Search for natural language queries over your enterprise data.*
 
-## Quick Start
+[![License](https://img.shields.io/badge/License-MIT--0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.8+-green.svg)](https://python.org/)
+[![AWS CDK](https://img.shields.io/badge/AWS-CDK-orange.svg)](https://aws.amazon.com/cdk/)
 
-### Prerequisites
-- AWS Account with Amazon Q Business access
-- Snowflake Account with Cortex Search enabled
-- IAM Identity Center instance configured
+## Introduction
 
-### 1. Deploy Infrastructure
+This solution demonstrates **Amazon Q Business Custom Plugins** by automating the integration with Snowflake Cortex Search. Custom plugins enable Amazon Q Business to connect with third-party applications through OpenAPI specifications, allowing users to query data using natural language.
+
+This automated deployment transforms the manual 15+ step process from the [Snowflake quickstart guide](https://quickstarts.snowflake.com/guide/getting_started_with_amazon_q_business%20and_cortex/index.html#0) into a single command, accelerating custom plugin deployment for your organization.
+
+
+## Getting Started
+
+#### Prerequisites:
+
+* AWS Account with Amazon Q Business access
+* Snowflake Account with Cortex Search enabled
+* IAM Identity Center instance configured
+* Python 3.8+ installed locally
+* Node.js and npm installed
+* AWS CLI configured
+
+## Setup
+
+**Step 1: Clone and navigate to the project:**
 
 ```bash
 git clone https://github.com/william-screen/sample-snowflake-plugin-for-amazon-q-business.git
 cd sample-snowflake-plugin-for-amazon-q-business/cdk-snowflake
-npm install
-pip install -r requirements.txt
+```
+
+**Step 2: Create Python Virtual Environment:**
+
+```bash
+# Create virtual environment
+python3 -m venv venv
+
+# Activate virtual environment
+source venv/bin/activate  # On macOS/Linux
+# OR
+venv\Scripts\activate     # On Windows
+```
+
+**Step 3: Configure Environment Variables:**
+
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit .env file with your actual values:
+# SNOWFLAKE_ACCOUNT=your-account-identifier
+# SNOWFLAKE_USER=your-snowflake-username
+# SNOWFLAKE_PASSWORD=your-snowflake-password
+# SNOWFLAKE_ROLE=your-snowflake-role
+# AWS_REGION=us-east-1  # Change to your desired region
+# IDENTITY_CENTER_INSTANCE_ARN=arn:aws:sso:::instance/ssoins-xxxxxxxxx
+```
+
+**Step 4: Deploy the infrastructure.**
+
+Single command deployment (~5-10 minutes):
+
+```bash
+# Make sure virtual environment is activated
+source venv/bin/activate
+
+# Set AWS region and deploy everything
+export AWS_REGION=us-east-1
 ./scripts/deploy.sh
 ```
 
-### 2. Configure Environment
+This automatically handles:
+- AWS infrastructure (Q Business, S3, IAM, Secrets Manager)
+- Snowflake setup (warehouse, database, Cortex Search)
+- Document processing and OAuth configuration
 
-Set your Snowflake credentials:
+**Step 5: Assign User Access:**
 
-```bash
-cd cdk-snowflake
-cp .env.example .env
-# Edit .env with your Snowflake details
-```
+1. Go to IAM Identity Center Console → **Applications**
+2. Find your Q Business application → **Assign users and groups**
+3. Add your user or group → Save
 
-### 3. Setup Snowflake
+**Step 6: Test Access:**
 
-```bash
-python3 src/lambda/snowflake_automation.py
-```
+1. Open private browser window → Navigate to Web Experience URL
+2. Sign in with IAM Identity Center credentials
+3. Test with sample query to verify integration
 
-### 4. Enable General Knowledge
-
-```bash
-aws qbusiness update-chat-controls-configuration \
-  --application-id YOUR_APPLICATION_ID \
-  --response-scope EXTENDED_KNOWLEDGE_ENABLED \
-  --region us-east-1
-```
+**Troubleshooting:** If you see "Amazon Q was not configured correctly" errors, ensure your Q Business application and IAM Identity Center are in the same AWS region.
 
 ## Usage
 
@@ -52,38 +100,102 @@ Ask natural language questions about your documents:
 - *"What are the pump head assembly parts?"*
 - *"What are the steps for replacing the heat exchanger?"*
 
-## Configuration
+## Reference Architecture
 
-Required environment variables:
+![Architecture Diagram](cdk-snowflake/docs/generated-diagrams/diagram_343afb97.png)
 
-```bash
-SNOWFLAKE_ACCOUNT=your-account-identifier
-SNOWFLAKE_USER=your-snowflake-username
-SNOWFLAKE_PASSWORD=your-snowflake-password
-IDENTITY_CENTER_INSTANCE_ARN=arn:aws:sso:::instance/ssoins-xxxxxxxxx
+The solution creates a secure integration between Amazon Q Business and Snowflake with the following components:
+
+* **Amazon Q Business Application**: Conversational AI interface with IAM Identity Center authentication
+* **Snowflake Cortex Search**: Vector search over processed documents
+* **S3 Bucket**: Document storage and processing
+* **Deployment Script**: Local Python automation (not AWS Lambda)
+* **Secrets Manager**: Secure OAuth credential storage
+* **IAM Roles**: Least-privilege permissions for service integration
+
+### Data Flow
+
+```mermaid
+graph LR
+    A[User] --> B[IAM Identity Center]
+    B --> C[Web Experience]
+    C --> D[Amazon Q Business]
+    
+    E[Deployment Script<br/>Local Python] --> F[S3 Bucket]
+    E --> G[Snowflake Database]
+    E --> I[Secrets Manager]
+    G --> H[Cortex Search]
+    
+    D --> I
+    I --> J[OAuth Integration]
+    J --> H
+    
+    D --> J
+    J --> H
+    H --> D
+    
+    style A fill:#e1f5fe
+    style D fill:#f3e5f5
+    style H fill:#e8f5e8
+    style G fill:#fff3e0
+    style E fill:#f0f0f0,stroke-dasharray: 5 5
+```
+
+### Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant IC as IAM Identity Center
+    participant WE as Web Experience
+    participant QB as Q Business
+    participant SM as Secrets Manager
+    participant SF as Snowflake OAuth
+    participant CS as Cortex Search
+    
+    U->>IC: Authenticate
+    IC->>WE: Access Token
+    WE->>QB: User Query
+    QB->>SM: Get OAuth Credentials
+    SM->>QB: Client ID/Secret
+    QB->>SF: OAuth Request
+    SF->>CS: Search Query
+    CS->>SF: Results
+    SF->>QB: Response
+    QB->>WE: Answer
+    WE->>U: Display Response
+```
+
+## Project Structure
+
+```
+cdk-snowflake/
+├── lib/                    # CDK stack definitions
+├── src/automation/         # Deployment automation scripts
+├── scripts/                # Deployment and utility scripts
+├── docs/                   # Documentation and diagrams
+│   └── generated-diagrams/ # Architecture diagrams
+├── requirements.txt        # Python dependencies
+└── package.json           # Node.js dependencies
 ```
 
 ## Cleanup
 
 ```bash
-cd cdk-snowflake
+source venv/bin/activate
 cdk destroy
 ```
 
-## Architecture
+This removes all AWS resources. Snowflake resources remain and need manual cleanup if desired.
 
-- **Amazon Q Business** - Conversational AI interface
-- **Snowflake Cortex Search** - Vector search over processed documents
-- **AWS CDK** - Infrastructure as code deployment
-- **OAuth 2.0** - Secure authentication between services
+## Contributing
 
-## Documentation
-
-- [Deployment Guide](cdk-snowflake/docs/DEPLOYMENT.md)
-- [Troubleshooting](cdk-snowflake/docs/TROUBLESHOOTING.md)
-- [CDK Documentation](cdk-snowflake/README.md)
-- [Snowflake Quickstart Guide](https://quickstarts.snowflake.com/guide/getting_started_with_amazon_q_business%20and_cortex/index.html#0)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ## License
 
-This project is licensed under the MIT-0 License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT-0 License. See [LICENSE](LICENSE) for details.
+
+## Security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md#security-issue-notifications) for security issue reporting.
