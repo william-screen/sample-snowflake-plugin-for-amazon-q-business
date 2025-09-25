@@ -17,12 +17,19 @@ This automated deployment transforms the manual 15+ step process from the [Snowf
 
 #### Prerequisites:
 
+**Required Accounts:**
 * AWS Account with Amazon Q Business access
 * Snowflake Account with Cortex Search enabled
 * IAM Identity Center instance configured
-* Python 3.8+ installed locally
-* Node.js and npm installed
-* AWS CLI configured
+
+**Required Software:**
+* Python 3.8+ installed locally (verify with `python --version` or `python3 --version`)
+* Node.js and npm installed (verify with `node --version` and `npm --version`)
+* AWS CLI installed and configured with credentials (verify with `aws sts get-caller-identity`)
+
+**First Time Setup:**
+* If you don't have AWS CLI configured, run `aws configure` and enter your access keys
+* If you don't have IAM Identity Center, create one in the AWS Console first
 
 ## Setup
 
@@ -36,13 +43,18 @@ cd sample-snowflake-plugin-for-amazon-q-business/cdk-snowflake
 **Step 2: Create Python Virtual Environment:**
 
 ```bash
-# Create virtual environment
-python3 -m venv venv
+# Create virtual environment (use python or python3 depending on your system)
+python -m venv venv
+# If that fails, try: python3 -m venv venv
 
 # Activate virtual environment
-source venv/bin/activate  # On macOS/Linux
-# OR
-venv\Scripts\activate     # On Windows
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+# venv\Scripts\activate
+
+# Verify activation (should show path to venv)
+which python
 ```
 
 **Step 3: Configure Environment Variables:**
@@ -52,12 +64,25 @@ venv\Scripts\activate     # On Windows
 cp .env.example .env
 
 # Edit .env file with your actual values:
-# SNOWFLAKE_ACCOUNT=your-account-identifier
-# SNOWFLAKE_USER=your-snowflake-username
-# SNOWFLAKE_PASSWORD=your-snowflake-password
-# SNOWFLAKE_ROLE=your-snowflake-role
-# AWS_REGION=us-east-1  # Change to your desired region
-# IDENTITY_CENTER_INSTANCE_ARN=arn:aws:sso:::instance/ssoins-xxxxxxxxx
+# Snowflake Configuration
+SNOWFLAKE_ACCOUNT=your-account-identifier
+SNOWFLAKE_USER=your-snowflake-username
+SNOWFLAKE_PASSWORD=your-snowflake-password
+SNOWFLAKE_WAREHOUSE=COMPUTE_WH
+SNOWFLAKE_DATABASE=PUMP_DB
+SNOWFLAKE_SCHEMA=PUBLIC
+SNOWFLAKE_ROLE=your-snowflake-role
+
+# AWS Configuration
+AWS_REGION=us-east-1
+IDENTITY_CENTER_INSTANCE_ARN=arn:aws:sso:::instance/ssoins-xxxxxxxxx
+
+# CDK Configuration
+CDK_DEFAULT_ACCOUNT=123456789012
+CDK_DEFAULT_REGION=us-east-1
+
+# Optional: Stack naming
+STACK_NAME=SnowflakeQBusinessRagStack
 ```
 
 **Step 4: Deploy the infrastructure.**
@@ -90,7 +115,17 @@ This automatically handles:
 2. Sign in with IAM Identity Center credentials
 3. Test with sample query to verify integration
 
-**Troubleshooting:** If you see "Amazon Q was not configured correctly" errors, ensure your Q Business application and IAM Identity Center are in the same AWS region.
+**Troubleshooting:** 
+
+**Common Issues:**
+- **"Amazon Q was not configured correctly"**: Ensure your Q Business application and IAM Identity Center are in the same AWS region
+- **"Permission denied" errors**: Make sure your AWS CLI has sufficient permissions (try `aws sts get-caller-identity` to verify)
+- **Virtual environment not working**: Deactivate with `deactivate`, delete the `venv` folder, and recreate it
+- **Deploy script fails**: Check that all environment variables in `.env` are filled out correctly
+
+**Getting Help:**
+- Check AWS CloudFormation console for detailed error messages if deployment fails
+- Verify your Snowflake credentials by logging into Snowflake web console first
 
 ## Usage
 
