@@ -48,6 +48,7 @@ class SnowflakeQBusinessRagStack(Stack):
             bucket_name=bucket_name,
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True,
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
         )
 
         # Step 2: Create Secrets Manager secret for Snowflake OAuth

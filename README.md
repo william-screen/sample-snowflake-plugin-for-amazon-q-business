@@ -218,9 +218,15 @@ cdk-snowflake/
 
 ## Cleanup
 
+**Automated cleanup (recommended):**
+
 ```bash
+# Navigate to project directory
+cd cdk-snowflake
+
+# Activate virtual environment and run cleanup script
 source venv/bin/activate
-cdk destroy
+./scripts/cleanup.sh
 ```
 
 This removes all AWS resources. Snowflake resources remain and need manual cleanup if desired.
